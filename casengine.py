@@ -1,5 +1,5 @@
 #!/usr/bin/env python2.7
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 
 # LICENCE:  GNU AFFERO GENERAL PUBLIC LICENSE v.3 https://github.com/dlfer/casengine/blob/master/LICENSE
 # https://github.com/dlfer/casengine
