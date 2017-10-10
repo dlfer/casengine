@@ -31,7 +31,7 @@ LATEX:
  =>
 %s 
 
-https://github.com/dlfer/casengine
+     https://github.com/dlfer/casengine
 (C)  DLFerrario http://www.dlfer.xyz
 """ 
 
@@ -384,7 +384,7 @@ def latex_unescape(s):
 def  get_cas_options(s):
   global DEFAULT_OPTIONS
   options={}
-  reg_cas_options=re.compile(r"\\usepackage\[(?P<CasOptions>.+?)\]{casengine}", re.M)
+  reg_cas_options=re.compile(r"^\\usepackage\[(?P<CasOptions>.+?)\]{casengine}", re.M)
   mo=reg_cas_options.search(s)
   if mo:
     LOG.write("cas_options found: %s\n" % mo.group('CasOptions') )
