@@ -67,6 +67,7 @@ prefix = CAS@
 \DeclareStringOption{CASOptions}
 \DeclareStringOption{CASPrompt}
 \DeclareStringOption{CASLatex}
+\DeclareStringOption{CASLatexOutsep}
 \DeclareStringOption{CASAssignString}
 \DeclareStringOption{CASPreamble}
 \ProcessKeyvalOptions*
@@ -75,6 +76,7 @@ CAS=\CAS@CAS,
 CASOptions=\CAS@CASOptions,
 CASPrompt=\CAS@CASPrompt,
 CASLatex=\CAS@CASLatex,
+CASLatexOutsep=\CAS@CASLatexOutsep,
 CASAssignString=\CAS@CASAssignString,
 CASPreamble=\CAS@CASPreamble
 }
@@ -337,6 +339,7 @@ class ExpectEngine(CasEngine):
               cas_options='-t -c "interface(screenwidth=infinity,errorcursor=false)"', 
               cas_prompt='#-->', 
               cas_latex='latex(%s);', 
+              cas_latex_outsep='\n',
               cas_assign_string='%s:= %s;',
               cas_preamble=None):
   import pexpect
@@ -345,6 +348,7 @@ class ExpectEngine(CasEngine):
   self.cas_engine="pExpect -> %s " % cas
   self.cas_prompt=cas_prompt
   self.cas_latex=cas_latex
+  self.cas_latex_outsep=cas_latex_outsep
   self.cas_assign_string=cas_assign_string
   cas_torun=(cas +" " + cas_options)
   self.child = pexpect.spawn(cas_torun , timeout=60, ignore_sighup=False )
@@ -365,7 +369,9 @@ class ExpectEngine(CasEngine):
   self.child.expect(self.cas_prompt)
   out=self.child.before
   # out = out[out.find(';')+1:].strip() ## __TODO__ change also this...
-  out = out[out.find('\n')+1:].strip() ## __TODO__ change also this...
+  # out = out[out.find('\n')+1:].strip() ## __TODO__ change also this...
+  out = out[out.find(self.cas_latex_outsep)+len(self.cas_latex_outsep):].strip() 
+  LOG.write("Found cas_get `%s`" % out)
   return out
  def cas_let(self,a,b):
   # TODO: switch cases...
@@ -381,11 +387,13 @@ class ExpectEngine(CasEngine):
 
 #--------------------------------------------------------------------------
 DEFAULT_OPTIONS={
-        'maple': {'CASOptions': '-t -c "interface(screenwidth=infinity,errorcursor=false)"' , 'CASPrompt': '#-->'  , 'CASLatex': 'latex(%s);' , 'CASAssignString': '%s:= %s;' , 'CASPreamble' : '' },
-        'sage' : {'CASOptions': '-q', 'CASPrompt': 'sage: ', 'CASLatex': 'latex(%s)', 'CASAssignString' : '%s= %s' , 'CASPreamble': "%colors NoColor"},
-        'math' : {'CASOptions': '', 'CASPrompt': '', 'CASLatex': 'latex(%s)', 'CASAssignString' : '%s= %s' , 'CASPreamble': ""},
-        'gap' : {'CASOptions': '', 'CASPrompt': '', 'CASLatex': 'latex(%s)', 'CASAssignString' : '%s= %s' , 'CASPreamble': ""}
+        'maple': {'CASOptions': '-t -c "interface(screenwidth=infinity,errorcursor=false)"' , 'CASPrompt': '#-->'  , 'CASLatex': 'latex(%s);' , 'CASLatexOutsep':'\n', 'CASAssignString': '%s:= %s;' , 'CASPreamble' : '' },
+        'sage' : {'CASOptions': '-q', 'CASPrompt': 'sage: ', 'CASLatex': 'latex(%s)', 'CASLatexOutsep':'\n', 'CASAssignString' : '%s= %s' , 'CASPreamble': "%colors NoColor"},
+        'math' : {'CASOptions': '-rawterm', 'CASPrompt': 'In[[0-9]+]:=', 'CASLatex': 'TeXForm [%s]', 'CASLatexOutsep':'TeXForm=', 'CASAssignString' : '%s= %s' , 'CASPreamble': ""},
+        'gap' : {'CASOptions': '-b -T ', 'CASPrompt': 'gap>', 'CASLatex': 'Print(%s);', 'CASLatexOutsep':';', 'CASAssignString' : '%s:= %s;' , 'CASPreamble': ""}
 }
+# GAP LaTeXObj not working yet...
+
 #--------------------------------------------------------------------------
 def latex_unescape(s):
   tmps=re.sub(r"\\%","%",s)
@@ -411,7 +419,8 @@ def  get_cas_options(s):
      result[k]=options[k]
   else:
     LOG.msg("WARNING: option %s has no default! Errors ahead...\n" % options['CAS'])
-    result=options   
+    result=options
+  LOG.write(options)  
   return result
 
 #--------------------------------------------------------------------------
@@ -485,6 +494,7 @@ def main():
                      cas_prompt=cas_options['CASPrompt'],
                      cas_options=cas_options['CASOptions'],
                      cas_latex=cas_options['CASLatex'],
+                     cas_latex_outsep=cas_options['CASLatexOutsep'],
                      cas_assign_string=cas_options['CASAssignString'],
                      cas_preamble=cas_options['CASPreamble']
              )

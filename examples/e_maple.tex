@@ -1,0 +1,49 @@
+\documentclass[a4paper,twoside,leqno]{article}
+\usepackage{amsmath,amsthm,amssymb,amsfonts}
+\usepackage{mathpazo} % I like it.
+
+\usepackage[CAS=maple]{casengine}
+
+\newcounter{exer}
+\numberwithin{exer}{subsection}
+\renewcommand{\theexer}{(E\arabic{exer})}
+\renewcommand{\thesubsection}{\Alph{subsection})}
+\newtheoremstyle{exer}% name
+     {24pt}%      Space above
+     {24pt}%      Space below
+     {}%         Body font: it was: \itshape
+     {}%         Indent amount (empty = no indent, \parindent = para indent)
+     {\bfseries}% Thm head font
+     {}%        Punctuation after thm head
+     {.5em}%     Space after thm head: " " = normal interword space;
+               % \newline = linebreak
+     {}%         Thm head spec (can be left empty, meaning `normal')
+
+\theoremstyle{exer}
+\newtheorem{exe}[exer]{}
+
+
+\begin{document}
+
+\section{Exercises}
+
+\begin{symfor}{q}{range(1,3)}%
+\begin{symfor}{c}{range(1,3)}%
+\begin{symfor}{x}{cos(t);sin(t);tan(t);exp(t);cosh(t);sinh(t);t**3-t**2+t-1}%
+
+\symexec{g:=q*x+c;}
+\begin{exe}
+Try to compute 
+\symexec{F:=Diff(expand(g),t);}
+\[
+\sym{F}
+\]
+Answer: $\sym{simplify(value(F))}$. 
+\end{exe}
+\end{symfor}
+
+\end{symfor}
+\end{symfor}
+
+
+\end{document}
