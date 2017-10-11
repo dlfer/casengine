@@ -194,9 +194,17 @@ Answer: $\sym{simplify(value(F))}$.
 """
 
 #--------------------------------------------------------------------------
+
+def my_strftime(td):
+    secs=td.total_seconds()
+    x=secs - td.seconds
+    h, rem = divmod(secs,60*60)
+    m,s    = divmod(rem,60)
+    return "%02i:%02i:%02i%s" % (h,m,s,  ("%.02f" % (x))[1:] ) 
+#--------------------------------------------------------------------------
 class Logger():
   def write(self,s):
-    dt=datetime.datetime.fromtimestamp(time.time())
+    dt=datetime.datetime.fromtimestamp(int(time.time()))
     global VERBOSE
     if VERBOSE: 
       sys.stderr.write("# %s #: %s" % (dt.isoformat(" "), s))
@@ -204,10 +212,10 @@ class Logger():
     sys.stderr.write("%s" % s)
   def times(self,start_time,end_time,filename, casengine=None):
     FMT="YYYY-MM-DD HH:MM:SS"
-    start_datetime=datetime.datetime.fromtimestamp(start_time)
-    end_datetime=datetime.datetime.fromtimestamp(end_time)
+    start_datetime=datetime.datetime.fromtimestamp(int(start_time))
+    end_datetime=datetime.datetime.fromtimestamp(int(end_time))
     elapsed_time=datetime.timedelta(seconds=end_time-start_time) 
-    output="File %s created by casengine.py (CAS engine: %s)\nStarted: %s\nFinished: %s\nElapsed time: %s\n" % (filename,casengine, start_datetime.isoformat(" "), end_datetime.isoformat(" "), elapsed_time)
+    output="File %s created by casengine.py (CAS engine: %s)\nStarted: %s\nFinished: %s\nElapsed time: %s\n" % (filename,casengine, start_datetime.isoformat(" "), end_datetime.isoformat(" "), my_strftime(elapsed_time) )
     return output
 LOG=Logger()
 
@@ -249,7 +257,7 @@ class CasEngine(object):
   return "".join([("%%%s" % l) for l in s.splitlines(True)])
  #Now: common functions to parse LaTeX 
  def expand_forcycle(self,s):
-  LOG.write("expand_forcycle called with len(s)=%s\n" % len(s))
+  LOG.write("expand_forcycle called on a tex string of length: %s chars\n" % len(s))
   ff= self.reg_forcycleiter.search(s)
   if ff:
    all = [ff for ff in self.reg_forcycleiter.finditer(s)]
@@ -268,17 +276,20 @@ class CasEngine(object):
   else:
    return s
  def sym_filter(self,s):
-   LOG.write("sym_filter called with len(s)=%s\n" % len(s))
+   LOG.write("sym_filter called on a tex string of length: %s chars\n" % len(s))
    self.number_of_syms=len(self.reg_sym.findall(s))
    self.number_of_syms_iter=0
-   LOG.write("There are %s to be processed...\n" % self.number_of_syms)
+   LOG.write("There are %s sym's to be processed...\n" % self.number_of_syms)
    return self.reg_sym.sub(self.my_filter_func,s)
  def my_filter_func(self,ob):
   self.number_of_syms_iter += 1
   ETA=(time.time() - self.start_time) * (self.number_of_syms*1.0/self.number_of_syms_iter - 1 ) 
-  ETAstr=str(datetime.timedelta(seconds=ETA))
-  LOG.write("Progress: %i/%i (%5.2f%%: ETA = %s)\n" % (self.number_of_syms_iter, self.number_of_syms , self.number_of_syms_iter * 100.0 / self.number_of_syms ,ETAstr ))
-  LOG.msg(".")
+  ETAstr=my_strftime(datetime.timedelta(seconds=ETA))
+  numlen=str(len(str(self.number_of_syms)))
+  if VERBOSE:
+      LOG.msg(("\rProgress: %"+numlen+"i/%i (%6.2f%%: ETA = %s)                 ") % (self.number_of_syms_iter, self.number_of_syms , self.number_of_syms_iter * 100.0 / self.number_of_syms ,ETAstr ))
+  else:
+      LOG.msg(".")
   if self.reg_symexec.match(ob.group()):
    if ob.group('symdata').strip() == 'CLEAR':
     LOG.write("Trying to clear namespace...\n")
@@ -477,7 +488,7 @@ def main():
                      cas_assign_string=cas_options['CASAssignString'],
                      cas_preamble=cas_options['CASPreamble']
              )
-     LOG.msg("Found CAS Engine= %s\n" % cas_options['CAS'])
+     LOG.msg("  => Found CAS Engine= %s\n" % cas_options['CAS'])
     else:
      LOG.msg("No CAS Engine Stated: using SymPy\n" )
      SE=SympyEngine()
@@ -492,6 +503,8 @@ def main():
     end_time=time.time()
     fd_output.write(SE.tex_comment( LOG.times(start_time,end_time,fd_output.name, casengine=SE.cas_engine) ) )
     fd_output.write(output_data)
+    LOG.msg("\n")
+    del SE
     LOG.msg("\n  => ...done! File %s created!\n" % fd_output.name)
 
 if __name__=='__main__':
