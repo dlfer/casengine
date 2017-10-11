@@ -94,5 +94,16 @@ This is a sentence with $\sqrt{5} + \pi + \frac{d}{d x} \sqrt{x^{2} + 1} + 2 = \
 \end{document}
 ```
 
-Further engines (easy to extend: maple, mathematica, sage, gap, ...).
+Further engines (easy to extend: maple, mathematica, sage, gap, ...): see the examples dir. 
+
+A note on elapsed times:
+
+```
+sympy:       Elapsed time: 00:00:00.59
+sage:        Elapsed time: 00:00:25.66
+maple:       Elapsed time: 00:00:15.07
+mathematica: Elapsed time: 00:00:16.10
+gap:         Elapsed time: 00:00:18.53
+```
+
 
