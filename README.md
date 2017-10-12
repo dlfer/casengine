@@ -1,7 +1,7 @@
 # CASengine
 
 
-**What for??** To generate parametrized exercises/texts in [LaTeX](https://en.wikipedia.org/wiki/LaTeX), from a compact source,
+**What for?** To generate parametrized exercises/texts in [LaTeX](https://en.wikipedia.org/wiki/LaTeX), from a compact source,
  while at the same time executing commands in **Computer Algebra Systems** in a localized namespace 
 (such as 
 [sympy](https://en.wikipedia.org/wiki/SymPy), 
@@ -117,5 +117,13 @@ mathematica: Elapsed time: 00:00:16.10
 sage:        Elapsed time: 00:00:25.66
 gap:         Elapsed time: 00:00:18.53
 ```
+
+## Inspired by...
+
+The idea was to have an analogue of [SageTeX](https://github.com/sagemath/sagetex),
+[sympytex](https://ctan.org/pkg/sympytex) or [pythontex](https://ctan.org/pkg/pythontex)
+but more with the idea of parametrized exercises generation than of a math notebook 
+document. This means that it acts as a LaTeX-to-LaTeX filter, allowing freedom to choose the CAS,
+instead of a LaTeX-to-CAS-language-to-PDF. 
 
 
