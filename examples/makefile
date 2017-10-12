@@ -6,11 +6,11 @@ default:
 makesty:
 	$(CE) --sty
 
-e_sympy e_sage e_maple e_mathematica e_gap: makesty
+e_sympy e_sage e_maple e_mathematica e_gap e_maxima: makesty
 	$(CE) -v $@.tex 
 	pdflatex $@_symout.tex
 
-all-test: e_sympy e_sage e_maple e_mathematica e_gap
+all-test: e_sympy e_sage e_maple e_mathematica e_gap e_maxima
 
 
 clean:

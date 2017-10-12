@@ -370,7 +370,12 @@ class ExpectEngine(CasEngine):
   out=self.child.before
   # out = out[out.find(';')+1:].strip() ## __TODO__ change also this...
   # out = out[out.find('\n')+1:].strip() ## __TODO__ change also this...
-  out = out[out.find(self.cas_latex_outsep)+len(self.cas_latex_outsep):].strip() 
+  if self.cas_name=='maxima':
+    tokens=out.split(self.cas_latex_outsep)
+    out = " ".join(tokens[1:-1])
+    out=out.strip()
+  else:         
+    out = out[out.find(self.cas_latex_outsep)+len(self.cas_latex_outsep):].strip() 
   LOG.write("Found cas_get `%s`" % out)
   return out
  def cas_let(self,a,b):
@@ -390,7 +395,8 @@ DEFAULT_OPTIONS={
         'maple': {'CASOptions': '-t -c "interface(screenwidth=infinity,errorcursor=false)"' , 'CASPrompt': '#-->'  , 'CASLatex': 'latex(%s);' , 'CASLatexOutsep':'\n', 'CASAssignString': '%s:= %s;' , 'CASPreamble' : '' },
         'sage' : {'CASOptions': '-q', 'CASPrompt': 'sage: ', 'CASLatex': 'latex(%s)', 'CASLatexOutsep':'\n', 'CASAssignString' : '%s= %s' , 'CASPreamble': "%colors NoColor"},
         'math' : {'CASOptions': '-rawterm', 'CASPrompt': 'In[[0-9]+]:=', 'CASLatex': 'TeXForm [%s]', 'CASLatexOutsep':'TeXForm=', 'CASAssignString' : '%s= %s' , 'CASPreamble': ""},
-        'gap' : {'CASOptions': '-b -T ', 'CASPrompt': 'gap>', 'CASLatex': 'Print(%s);', 'CASLatexOutsep':';', 'CASAssignString' : '%s:= %s;' , 'CASPreamble': ""}
+        'gap' : {'CASOptions': '-b -T ', 'CASPrompt': 'gap>', 'CASLatex': 'Print(%s);', 'CASLatexOutsep':';', 'CASAssignString' : '%s:= %s;' , 'CASPreamble': ""},
+        'maxima' : {'CASOptions': '-q --disable-readline', 'CASPrompt': '(%i[0-9]+)', 'CASLatex': 'tex(%s)$', 'CASLatexOutsep':'$$', 'CASAssignString' : '%s: %s $' , 'CASPreamble': ""}
 }
 # GAP LaTeXObj not working yet...
 

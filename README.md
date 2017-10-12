@@ -1,5 +1,16 @@
 # CASengine
 
+
+**What for??** To generate parametrized exercises/texts in [LaTeX](https://en.wikipedia.org/wiki/LaTeX), from a compact source,
+ while at the same time executing commands in **Computer Algebra Systems** in a localized namespace 
+(such as 
+[sympy](https://en.wikipedia.org/wiki/SymPy), 
+[SageMath](https://en.wikipedia.org/wiki/SageMath), [maple](https://en.wikipedia.org/wiki/Maple_(software)), 
+[mathematica](https://en.wikipedia.org/wiki/Mathematica), 
+[maxima](https://en.wikipedia.org/wiki/Maxima_(software)),
+[gap](https://en.wikipedia.org/wiki/GAP_(computer_algebra_system)), 
+...). Adding one CAS interface should be relatively easy. 
+ 	 
 ```
 OPTIONS:
         --help|-h       Help
@@ -100,9 +111,10 @@ A note on elapsed times:
 
 ```
 sympy:       Elapsed time: 00:00:00.59
-sage:        Elapsed time: 00:00:25.66
+maxima:      Elapsed time: 00:00:12.20
 maple:       Elapsed time: 00:00:15.07
 mathematica: Elapsed time: 00:00:16.10
+sage:        Elapsed time: 00:00:25.66
 gap:         Elapsed time: 00:00:18.53
 ```
 
