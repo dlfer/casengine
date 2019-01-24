@@ -1,0 +1,77 @@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\def\fileversion{0.92}
+\def\filedate{2017-06-12}
+\def\Copyright{**********************************************
+Quest'opera è stata rilasciata con licenza Creative Commons Attribuzione - Non commerciale - Non opere derivate 3.0 Unported. Per leggere una copia della licenza visita il sito web http://creativecommons.org/licenses/by-nc-nd/3.0/ o spedisci una lettera a Creative Commons, 171 Second Street, Suite 300, San Francisco, California, 94105, USA.
+
+Credits to https://tex.stackexchange.com/questions/127010/how-can-i-make-lstinline-function-normally-inside-math-mode
+
+(C) DLFerrario http://www.dlfer.xyz
+**********************************************
+}
+\NeedsTeXFormat{LaTeX2e}[1996/06/01]
+\typeout{Package `CasEngine' <\filedate>.}
+\typeout{\Copyright}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{kvoptions}
+\SetupKeyvalOptions{
+family = CAS,
+prefix = CAS@
+}
+\DeclareStringOption{CAS}
+\DeclareStringOption{CASOptions}
+\DeclareStringOption{CASPrompt}
+\DeclareStringOption{CASLatex}
+\DeclareStringOption{CASLatexOutsep}
+\DeclareStringOption{CASAssignString}
+\DeclareStringOption{CASPreamble}
+\ProcessKeyvalOptions*
+\typeout{%
+CAS=\CAS@CAS,
+CASOptions=\CAS@CASOptions,
+CASPrompt=\CAS@CASPrompt,
+CASLatex=\CAS@CASLatex,
+CASLatexOutsep=\CAS@CASLatexOutsep,
+CASAssignString=\CAS@CASAssignString,
+CASPreamble=\CAS@CASPreamble
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\RequirePackage{listings}
+\lstset{language=Python,
+basicstyle=\ttfamily,
+mathescape=true
+}
+
+\usepackage{letltxmacro}
+\newcommand*{\SavedLstInline}{}
+\LetLtxMacro\SavedLstInline\lstinline
+\DeclareRobustCommand*{\lstinline}{%
+  \ifmmode
+    \let\SavedBGroup\bgroup
+    \def\bgroup{%
+      \let\bgroup\SavedBGroup
+      \hbox\bgroup
+    }%
+  \fi
+  \SavedLstInline
+}
+
+\newenvironment{symfor}[2]{%
+
+\noindent\lstinline|((for #1 in  [#2] ))|
+
+}{%
+
+\noindent\lstinline|((end for ))|
+
+}
+
+\newcommand{\sym}[1]{%
+\lstinline|(( #1 ))|
+}
+
+\newcommand{\symexec}[1]{%
+\lstinline|((symexec: #1 ))|
+}
