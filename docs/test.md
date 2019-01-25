@@ -1,4 +1,4 @@
-layout: default
+---
 title: test page in markdown
 permalink: /latex/
 ---
