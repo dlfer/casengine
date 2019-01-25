@@ -1,3 +1,4 @@
+---
 layout: page
 title: test page in markdown
 permalink: /latex/
