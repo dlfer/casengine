@@ -50,6 +50,7 @@ This is a sentence with $\sym{q} + \sym{x} + \sym{c} = \sym{q+x.doit()+c}$.
 
 Executing `casengine.py` on the file yields an outut such as the following
 (the `symfor` cycles are cycled through,  the `\symexec` commands executed and the `\sym` expressions are latexified and printed, as follows:
+
 ```latex
 %File test_symout.tex created by casengine.py (CAS engine: SymPy Version 0.7.4.1)
 %Started: 2017-10-10 16:08:37.270242
