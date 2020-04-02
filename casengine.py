@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # LICENCE:  GNU AFFERO GENERAL PUBLIC LICENSE v.3 https://github.com/dlfer/casengine/blob/master/LICENSE
@@ -6,7 +6,7 @@
 # (C) DLFerrario http://www.dlfer.xyz
 
 r"""
-# Version: 2017-10-10
+# Version: 2020-04-01
 casengine.py [options] [filename]
 
 a Pre-Processor for (La)TeX files, that interact with Compuuter Algebra Systems: sympy, maple, ... 
@@ -35,11 +35,13 @@ LATEX:
 (C)  DLFerrario http://www.dlfer.xyz
 """ 
 
+from __future__ import absolute_import
 import sys
 import re
 import os
 import getopt
 import datetime, time
+from six.moves import range
 
 #--------------------------------------------------------------------------
 __sty__=r"""
@@ -213,7 +215,7 @@ class Logger():
   def msg(self,s):
     sys.stderr.write("%s" % s)
   def times(self,start_time,end_time,filename, casengine=None):
-    FMT="YYYY-MM-DD HH:MM:SS"
+    FMT="YYYY-MM-DD HH:MM:SS" # what for? 
     start_datetime=datetime.datetime.fromtimestamp(int(start_time))
     end_datetime=datetime.datetime.fromtimestamp(int(end_time))
     elapsed_time=datetime.timedelta(seconds=end_time-start_time) 
@@ -223,7 +225,7 @@ LOG=Logger()
 
 #--------------------------------------------------------------------------
 class CasEngine(object):
- def __init__(self,name=None,start_time=time.time()):
+ def __init__(self,name=None,start_time=time.time(),do_cas_init=True):
   LOG.write("__init__ called!\n")
   self.reg_forcycleiter=re.compile( r"(\\begin{symfor}{(?P<var>.+?)}{(?P<symlist>.+?)})|(\\end{symfor})", re.M and re.DOTALL)
   # self.reg_forcycleiter=re.compile( r"(\n\\symfor{(?P<var>.+?)}{(?P<symlist>.+?)})|(\n\\symforend)", re.M and re.DOTALL)
@@ -233,7 +235,7 @@ class CasEngine(object):
   self.name=name
   self.localNameSpace={}
   self.cas_engine=None
-  self.cas_init()
+  if do_cas_init: self.cas_init()
   self.number_of_syms=None #initialized by filter 
   self.number_of_syms_iter=None
   self.start_time=start_time
@@ -259,9 +261,8 @@ class CasEngine(object):
   return "".join([("%%%s" % l) for l in s.splitlines(True)])
  #Now: common functions to parse LaTeX 
  def expand_forcycle(self,s):
-  LOG.write("expand_forcycle called on a tex string of length: %s chars\n" % len(s))
-  ff= self.reg_forcycleiter.search(s)
-  if ff:
+  LOG.write("expand_forcycle called on a tex string of length: %s chars\n%s\n" % (len(s),s) )
+  if self.reg_forcycleiter.search(s):
    all = [ff for ff in self.reg_forcycleiter.finditer(s)]
    lenall=len(all)
    for i in range(lenall-1): 
@@ -289,7 +290,9 @@ class CasEngine(object):
   ETAstr=my_strftime(datetime.timedelta(seconds=ETA))
   numlen=str(len(str(self.number_of_syms)))
   if VERBOSE:
-      LOG.msg(("\rProgress: %"+numlen+"i/%i (%6.2f%%: ETA = %s)                 ") % (self.number_of_syms_iter, self.number_of_syms , self.number_of_syms_iter * 100.0 / self.number_of_syms ,ETAstr ))
+      LOG.msg(("\rProgress: %"+numlen+"i/%i (%6.2f%%: ETA = %s)                 ") \
+              % (self.number_of_syms_iter, self.number_of_syms , 
+                  self.number_of_syms_iter * 100.0 / self.number_of_syms ,ETAstr ))
   else:
       LOG.msg(".")
   if self.reg_symexec.match(ob.group()):
@@ -321,7 +324,7 @@ from sympy import *
   output='cas_exec: %s' % s
   try:
    exec(s, self.localNameSpace)
-  except Exception, v:
+  except Exception as v:
    output += " => ERROR: %s\n" % v
    raise Exception("SymPy Error: %s while processing command `%s'" % (v,s) )
   return self.tex_comment(output)
@@ -333,9 +336,16 @@ from sympy import *
   return "%s=%s" % (a,b) 
 
 #--------------------------------------------------------------------------
+def remove_ansi_escape(line):
+    ansi_escape =re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]')
+    ansi_escape =re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+    return ansi_escape.sub(" ",line)
+#     return ansi_escape.sub(b'', line.encode()).decode('utf-8')
+
+#--------------------------------------------------------------------------
 class ExpectEngine(CasEngine):
  def cas_init(self,
-              cas='maple',
+              cas='REMOVEDmaple',
               cas_options='-t -c "interface(screenwidth=infinity,errorcursor=false)"', 
               cas_prompt='#-->', 
               cas_latex='latex(%s);', 
@@ -351,7 +361,10 @@ class ExpectEngine(CasEngine):
   self.cas_latex_outsep=cas_latex_outsep
   self.cas_assign_string=cas_assign_string
   cas_torun=(cas +" " + cas_options)
-  self.child = pexpect.spawn(cas_torun , timeout=60, ignore_sighup=False )
+  # self.child = pexpect.spawn(cas_torun , timeout=60, ignore_sighup=False ,encoding='utf-8', env = {"TERM": "dumb"} )
+  os.environ["TERM"] = "dumb"
+  os.environ["IPY_TEST_SIMPLE_PROMPT"] = "True"
+  self.child = pexpect.spawn(cas_torun , timeout=60, ignore_sighup=False ,encoding='utf-8' )
   self.child.expect(self.cas_prompt)
   if cas_preamble:
    for x in cas_preamble.split("\n"):
@@ -362,12 +375,12 @@ class ExpectEngine(CasEngine):
   output='cas_exec: %s' % ( s,  ) 
   self.child.sendline(s)
   self.child.expect(self.cas_prompt)
-  out_null=self.child.before
+  out_null=self.child.before ## what for?
   return self.tex_comment(output)
  def cas_get(self,s):
   self.child.sendline(self.cas_latex % s)
   self.child.expect(self.cas_prompt)
-  out=self.child.before
+  out=remove_ansi_escape(self.child.before)
   # out = out[out.find(';')+1:].strip() ## __TODO__ change also this...
   # out = out[out.find('\n')+1:].strip() ## __TODO__ change also this...
   if self.cas_name=='maxima':
@@ -391,9 +404,11 @@ class ExpectEngine(CasEngine):
   self.child.terminate()
 
 #--------------------------------------------------------------------------
+# "%colors NoColor"
 DEFAULT_OPTIONS={
         'maple': {'CASOptions': '-t -c "interface(screenwidth=infinity,errorcursor=false)"' , 'CASPrompt': '#-->'  , 'CASLatex': 'latex(%s);' , 'CASLatexOutsep':'\n', 'CASAssignString': '%s:= %s;' , 'CASPreamble' : '' },
-        'sage' : {'CASOptions': '-q', 'CASPrompt': 'sage: ', 'CASLatex': 'latex(%s)', 'CASLatexOutsep':'\n', 'CASAssignString' : '%s= %s' , 'CASPreamble': "%colors NoColor"},
+        'sage-5' : {'CASOptions': '-q', 'CASPrompt': 'sage: ', 'CASLatex': 'latex(%s)', 'CASLatexOutsep':'\n', 'CASAssignString' : '%s= %s' , 'CASPreamble': "%colors NoColor"},
+        'sage' : {'CASOptions': '-q', 'CASPrompt': '(sage: |>>> )', 'CASLatex': '%s', 'CASLatexOutsep':'\n', 'CASAssignString' : '%s= %s' , 'CASPreamble': "%colors NoColor\nfrom IPython.terminal.prompts import ClassicPrompts\nip = get_ipython()\nip.prompts = ClassicPrompts(ip)"},
         'math' : {'CASOptions': '-rawterm', 'CASPrompt': 'In[[0-9]+]:=', 'CASLatex': 'TeXForm [%s]', 'CASLatexOutsep':'TeXForm=', 'CASAssignString' : '%s= %s' , 'CASPreamble': ""},
         'gap' : {'CASOptions': '-b -T ', 'CASPrompt': 'gap>', 'CASLatex': 'Print(%s);', 'CASLatexOutsep':';', 'CASAssignString' : '%s:= %s;' , 'CASPreamble': ""},
         'maxima' : {'CASOptions': '-q --disable-readline', 'CASPrompt': '(%i[0-9]+)', 'CASLatex': 'tex(%s)$', 'CASLatexOutsep':'$$', 'CASAssignString' : '%s: %s $' , 'CASPreamble': ""}
@@ -435,7 +450,7 @@ def get_opt():
   explicit_output=False
   try:
     opts,args = getopt.getopt(sys.argv[1:],"hvno:",["help","output=","sty","verbose","noexec"])
-  except getopt.GetoptError,err:
+  except getopt.GetoptError as err:
     sys.stderr.write("GetOpt Error: %s\n[option --help for help]\n" % err)
     sys.exit(2)
   for o,a in opts:
@@ -447,14 +462,14 @@ def get_opt():
           sys.stdout.write(__doc__ % (example_tex, example_test() ) )
           sys.exit()
       elif o in ("--sty",):
-          fd=file('casengine.sty','wa')
+          fd=open('casengine.sty','w')
           fd.write(__sty__)
           fd.close()
           LOG.msg("File %s created!\n" % fd.name)
           sys.exit()
       elif o in ("-o","--output"):
           explicit_output=True
-          fd_output=file(a,'w')
+          fd_output=open(a,'w')
       else:
           assert False, "unhandled option" 
   if len(args)==0:
@@ -462,10 +477,10 @@ def get_opt():
     if not explicit_output:
      fd_output=sys.stdout
   else:  
-    input_data=file(args[0]).read()
+    input_data=open(args[0]).read()
     if not explicit_output:
      b,e=os.path.splitext(args[0])
-     fd_output=file("%s_symout%s" % (b,e),'w')
+     fd_output=open("%s_symout%s" % (b,e),'w')
   return input_data, fd_output       
 
 #--------------------------------------------------------------------------
@@ -475,7 +490,7 @@ def example_test():
  # SE=ExpectEngine()
  # s= SE.expand_forcycle(example_tex_maple)
  s= SE.expand_forcycle(example_tex)
- LOG.msg("GET_CAS_DATA: %s\n"% get_cas_options(example_tex_maple))
+ if VERBOSE: LOG.msg("GET_CAS_DATA: %s\n"% get_cas_options(example_tex_maple))
  return(SE.sym_filter(s))
 
 #--------------------------------------------------------------------------
@@ -493,9 +508,9 @@ def main():
     start_time=time.time()
     input_data,fd_output = get_opt()
     cas_options=get_cas_options(input_data)
-    # LOG.write("%s\n" % cas_options)
+    if VERBOSE: LOG.write("cas_options: %s\n" % cas_options)
     if cas_options:
-     SE=ExpectEngine(name=cas_options['CAS'])   
+     SE=ExpectEngine(name=cas_options['CAS'],do_cas_init=False)   
      SE.cas_init(cas=cas_options['CAS'],
                      cas_prompt=cas_options['CASPrompt'],
                      cas_options=cas_options['CASOptions'],

@@ -119,6 +119,13 @@ sage:        Elapsed time: 00:00:25.66
 gap:         Elapsed time: 00:00:18.53
 ```
 
+
+## Problem with the new sage
+
+The rich-consolish-interface of the new sage does not work well with pexpect, so that I was 
+not able to upgrade let it work. I should probably read how to run it via ipython, but ...
+
+
 ## Inspired by...
 
 The idea was to have an analogue of [SageTeX](https://github.com/sagemath/sagetex),
